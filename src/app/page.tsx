@@ -17,18 +17,42 @@ export default function Home() {
 
     setLoading(true);
     try {
-      const canvas = await html2canvas(el);
-      const imgData = canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'px',
-        format: [canvas.width, canvas.height],
+      const canvas = await html2canvas(el, {
+        scale: 2, // kualitas tinggi tanpa blur
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        useCORS: true,
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const imgData = canvas.toDataURL('image/png');
+
+      // Gunakan ukuran A4 horizontal (landscape) dalam satuan mm
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      // Skala agar gambar tetap proporsional
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+
+      const imgScaledWidth = imgWidth * ratio;
+      const imgScaledHeight = imgHeight * ratio;
+
+      const x = (pdfWidth - imgScaledWidth) / 2;
+      const y = (pdfHeight - imgScaledHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', x, y, imgScaledWidth, imgScaledHeight);
       pdf.save(`Sertifikat_${name}.pdf`);
-    } catch {
+    } catch (error) {
+      console.error(error);
       alert('Gagal mengunduh sertifikat.');
     } finally {
       setLoading(false);
