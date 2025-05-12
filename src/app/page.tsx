@@ -2,18 +2,15 @@
 
 import { useState } from 'react';
 import html2canvas from 'html2canvas';
-import CertificatePreview from '@/components/CertificatePreview';
+import jsPDF from 'jspdf';
+import CertificatePreview from '../components/CertificatePreview';
 
 export default function Home() {
   const [name, setName] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSend = async () => {
-    if (!name || !whatsapp) return alert('Isi nama dan nomor WhatsApp');
-
-    const isValid = /^(08\d{8,}|62\d{8,})$/.test(whatsapp);
-    if (!isValid) return alert('Nomor WhatsApp tidak valid');
+  const handleDownload = async () => {
+    if (!name) return alert('Isi nama terlebih dahulu');
 
     const el = document.getElementById('certificate');
     if (!el) return alert('Sertifikat tidak ditemukan.');
@@ -21,33 +18,18 @@ export default function Home() {
     setLoading(true);
     try {
       const canvas = await html2canvas(el);
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64 = dataUrl.split(',')[1]; // buang prefix
+      const imgData = canvas.toDataURL('image/png');
 
-      // Debugging: Periksa base64 string yang dikirim
-      console.log("Base64 image data:", base64);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
       });
 
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Gagal upload');
-
-      const phone = whatsapp.replace(/^0/, '62');
-      const message = `Halo ${name}, berikut sertifikat Anda:\n${data.url}`;
-      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-      window.open(waUrl, '_blank');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        alert('Gagal kirim: ' + err.message);
-      } else {
-        alert('Gagal kirim: Terjadi kesalahan.');
-      }
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Sertifikat_${name}.pdf`);
+    } catch {
+      alert('Gagal mengunduh sertifikat.');
     } finally {
       setLoading(false);
     }
@@ -64,20 +46,12 @@ export default function Home() {
         style={{ padding: '0.5rem', marginBottom: '1rem', fontSize: '1rem' }}
       />
       <br />
-      <input
-        type="text"
-        placeholder="Nomor WhatsApp (08xxxx)"
-        value={whatsapp}
-        onChange={(e) => setWhatsapp(e.target.value)}
-        style={{ padding: '0.5rem', fontSize: '1rem' }}
-      />
-      <br />
       <button
-        onClick={handleSend}
+        onClick={handleDownload}
         style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
         disabled={loading}
       >
-        {loading ? 'Mengirim...' : 'Kirim lewat WhatsApp'}
+        {loading ? 'Mengunduh...' : 'Download Sertifikat'}
       </button>
 
       {name && (

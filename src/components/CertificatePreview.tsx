@@ -1,49 +1,37 @@
-'use client';
-
 import React from 'react';
-import Image from 'next/image';
 
-type Props = {
-    name: string;
-};
-
-const CertificatePreview: React.FC<Props> = ({ name }) => {
+export default function CertificatePreview({ name }: { name: string }) {
     return (
         <div
             id="certificate"
             style={{
+                width: '1123px', // A4 size in px at 96dpi
+                height: '794px',
+                margin: '0 auto',
                 position: 'relative',
-                width: '800px',
-                height: '565px',
-                border: '1px solid #ddd', // Untuk melihat batas container
+                backgroundImage: 'url("/certificate-bg.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
             }}
         >
-            <Image
-                src="/sertifikat.png" // Pastikan gambar ada di folder public
-                alt="sertifikat"
-                layout="fill"
-                objectFit="cover"
-                priority
-            />
-
-            {/* Text nama peserta */}
+            {/* Nama peserta di posisi yang sesuai dengan layout background */}
             <div
                 style={{
                     position: 'absolute',
-                    top: '47%',
+                    top: '50%', // sesuaikan
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    fontSize: '32px',
-                    fontFamily: "'Quincho', sans-serif", // Pastikan font ini di-load dengan benar
+                    fontSize: '36px',
                     fontWeight: 'bold',
-                    color: '#000',
-                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.6)', // Tambahkan shadow untuk visibilitas
+                    color: '#000000',
+                    width: '100%',
+                    textAlign: 'center',
+                    fontFamily: '"Times New Roman", serif',
                 }}
             >
                 {name}
             </div>
         </div>
     );
-};
-
-export default CertificatePreview;
+}
